@@ -29,13 +29,21 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface Parameter {
-
+    /**
+     * 键（别名）
+     */
     String key() default "";
-
+    /**
+     * 是否必填
+     */
     boolean required() default false;
-
+    /**
+     * 是否忽略
+     */
     boolean excluded() default false;
-
+    /**
+     * 是否转义
+     */
     boolean escaped() default false;
 
     boolean attribute() default false;

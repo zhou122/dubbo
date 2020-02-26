@@ -55,14 +55,15 @@ public final class Version {
             return false;
         }
     }
-
+    //获得版本号
     public static String getVersion(Class<?> cls, String defaultVersion) {
         try {
-            // find version info from MANIFEST.MF first
+            // find version info from MANIFEST.MF first 首先从项目下的MANIFEST.MF文件中找
             String version = cls.getPackage().getImplementationVersion();
             if (version == null || version.length() == 0) {
                 version = cls.getPackage().getSpecificationVersion();
             }
+            //若获取不到，从 jar 包命名中可能带的版本号作为结果。例如 spring-boot-starter-1.5.10.RELEASE.jar中的1.5.10.RELEASE
             if (version == null || version.length() == 0) {
                 // guess version fro jar file name if nothing's found from MANIFEST.MF
                 CodeSource codeSource = cls.getProtectionDomain().getCodeSource();
@@ -92,7 +93,7 @@ public final class Version {
                     }
                 }
             }
-            // return default version if no version info is found
+            // return default version if no version info is found    返回版本号，若不存在，返回默认版本号
             return version == null || version.length() == 0 ? defaultVersion : version;
         } catch (Throwable e) {
             // return default version when any exception is thrown
