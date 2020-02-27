@@ -35,9 +35,11 @@ public interface Exchanger {
     /**
      * bind.
      *
-     * @param url
-     * @param handler
-     * @return message server
+     * 绑定一个服务器  基于 Dubbo SPI Adaptive 机制，加载对应的 Server 实现，使用 URL.exchanger 属性
+     *
+     * @param url server url
+     * @param handler 数据交换处理器
+     * @return message server 服务器
      */
     @Adaptive({Constants.EXCHANGER_KEY})
     ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException;
@@ -45,9 +47,11 @@ public interface Exchanger {
     /**
      * connect.
      *
-     * @param url
-     * @param handler
-     * @return message channel
+     * 连接一个服务器，即创建一个客户端  基于 Dubbo SPI Adaptive 机制，加载对应的 Client 实现，使用 URL.exchanger 属性
+     *
+     * @param url server url 服务器地址
+     * @param handler 数据交换处理器
+     * @return message channel 客户端
      */
     @Adaptive({Constants.EXCHANGER_KEY})
     ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException;

@@ -96,16 +96,20 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
     }
 
     public List<String> addChildListener(String path, final ChildListener listener) {
+        // 获得路径下的监听器数组
         ConcurrentMap<ChildListener, TargetChildListener> listeners = childListeners.get(path);
         if (listeners == null) {
             childListeners.putIfAbsent(path, new ConcurrentHashMap<ChildListener, TargetChildListener>());
             listeners = childListeners.get(path);
         }
+        // 获得是否已经有该监听器
         TargetChildListener targetListener = listeners.get(listener);
+        // 监听器不存在，进行创建
         if (targetListener == null) {
             listeners.putIfAbsent(listener, createTargetChildListener(path, listener));
             targetListener = listeners.get(listener);
         }
+        // 向 Zookeeper ，真正发起订阅
         return addTargetChildListener(path, targetListener);
     }
 
@@ -114,11 +118,16 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
         if (listeners != null) {
             TargetChildListener targetListener = listeners.remove(listener);
             if (targetListener != null) {
+                // 向 Zookeeper ，真正发起取消订阅
                 removeTargetChildListener(path, targetListener);
             }
         }
     }
-
+    /**
+     * StateListener 数组，回调
+     *
+     * @param state 状态
+     */
     protected void stateChanged(int state) {
         for (StateListener sessionListener : getSessionListeners()) {
             sessionListener.stateChanged(state);
@@ -139,10 +148,23 @@ public abstract class AbstractZookeeperClient<TargetChildListener> implements Zo
 
     protected abstract void doClose();
 
+    /**
+     * 创建持久节点
+     * @param path
+     */
     protected abstract void createPersistent(String path);
 
+    /**
+     * 创建临时节点
+     * @param path
+     */
     protected abstract void createEphemeral(String path);
 
+    /**
+     * 节点是否存在
+     * @param path
+     * @return
+     */
     protected abstract boolean checkExists(String path);
 
     protected abstract TargetChildListener createTargetChildListener(String path, ChildListener listener);

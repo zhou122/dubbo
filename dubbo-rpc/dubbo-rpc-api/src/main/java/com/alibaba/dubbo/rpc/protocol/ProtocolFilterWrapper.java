@@ -75,6 +75,14 @@ public class ProtocolFilterWrapper implements Protocol {
                         return invoker.isAvailable();
                     }
 
+                    /**
+                     * 调用 Filter#(invoker, invocation) 方法，不断执行过滤逻辑。而在 Filter 中，又不断调用 Invoker#invoker(invocation) 方法，
+                     * 最终最后一个 Filter ，会调用 InjvmInvoker#invoke(invocation) 方法，继续执行逻辑
+                     * (不同的协议，会调用不同的 Invoker 实现类，例如 Dubbo 协议，调用的是 DubboInvoker)
+                     * @param invocation
+                     * @return
+                     * @throws RpcException
+                     */
                     public Result invoke(Invocation invocation) throws RpcException {
                         return filter.invoke(next, invocation);
                     }

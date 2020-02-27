@@ -66,26 +66,30 @@ public class ExchangeCodec extends TelnetCodec {
     }
 
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
-        if (msg instanceof Request) {
+        if (msg instanceof Request) { // 请求
             encodeRequest(channel, buffer, (Request) msg);
-        } else if (msg instanceof Response) {
+        } else if (msg instanceof Response) { // 响应
             encodeResponse(channel, buffer, (Response) msg);
-        } else {
+        } else { // 提交给父类( Telnet ) 处理，目前是 Telnet 命令的结果
             super.encode(channel, buffer, msg);
         }
     }
 
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
+        // 读取 Header 数组
         int readable = buffer.readableBytes();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
         buffer.readBytes(header);
+        // 解码
         return decode(channel, buffer, readable, header);
     }
 
     protected Object decode(Channel channel, ChannelBuffer buffer, int readable, byte[] header) throws IOException {
+        // 非 Dubbo 协议，目前是 Telnet 命令
         // check magic number.
         if (readable > 0 && header[0] != MAGIC_HIGH
                 || readable > 1 && header[1] != MAGIC_LOW) {
+            // 将 buffer 完全复制到 `header` 数组中。因为，上面的 `#decode(channel, buffer)` 方法，可能未读全
             int length = header.length;
             if (header.length < readable) {
                 header = Bytes.copyOf(header, readable);
@@ -98,28 +102,34 @@ public class ExchangeCodec extends TelnetCodec {
                     break;
                 }
             }
+            // 提交给父类( Telnet ) 处理，目前是 Telnet 命令
             return super.decode(channel, buffer, readable, header);
         }
+        // Header 长度不够，返回需要更多的输入
         // check length.
         if (readable < HEADER_LENGTH) {
             return DecodeResult.NEED_MORE_INPUT;
         }
 
+        // `[96 - 127]`：Body 的**长度**。通过该长度，读取 Body
         // get data length.
         int len = Bytes.bytes2int(header, 12);
         checkPayload(channel, len);
 
+        // 总长度不够，返回需要更多的输入
         int tt = len + HEADER_LENGTH;
         if (readable < tt) {
             return DecodeResult.NEED_MORE_INPUT;
         }
 
+        // 解析 Header + Body
         // limit input stream.
         ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
 
         try {
             return decodeBody(channel, is, header);
         } finally {
+            // skip 未读完的流，并打印错误日志
             if (is.available() > 0) {
                 try {
                     if (logger.isWarnEnabled()) {
@@ -206,40 +216,48 @@ public class ExchangeCodec extends TelnetCodec {
 
     protected void encodeRequest(Channel channel, ChannelBuffer buffer, Request req) throws IOException {
         Serialization serialization = getSerialization(channel);
+        // `[0, 15]`：Magic Number
         // header.
         byte[] header = new byte[HEADER_LENGTH];
         // set magic number.
         Bytes.short2bytes(MAGIC, header);
-
+        // `[16, 20]`：Serialization 编号 && `[23]`：请求
         // set request and serialization flag.
         header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
-
+        // `[21]`：`event` 是否为事件
         if (req.isTwoWay()) header[2] |= FLAG_TWOWAY;
+        // `[22]`：`twoWay` 是否需要响应
         if (req.isEvent()) header[2] |= FLAG_EVENT;
-
+        // `[32 - 95]`：`id` 编号，Long 型
         // set request id.
         Bytes.long2bytes(req.getId(), header, 4);
-
+        // 编码 `Request.data` 到 Body ，并写入到 Buffer
         // encode request data.
         int savedWriteIndex = buffer.writerIndex();
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);
         ChannelBufferOutputStream bos = new ChannelBufferOutputStream(buffer);
-        ObjectOutput out = serialization.serialize(channel.getUrl(), bos);
+        ObjectOutput out = serialization.serialize(channel.getUrl(), bos);// 序列化 Output
         if (req.isEvent()) {
             encodeEventData(channel, out, req.getData());
         } else {
             encodeRequestData(channel, out, req.getData());
         }
+        // 释放资源
         out.flushBuffer();
         if (out instanceof Cleanable) {
             ((Cleanable) out).cleanup();
         }
         bos.flush();
         bos.close();
+        // 检查 Body 长度，是否超过消息上限
         int len = bos.writtenBytes();
+        // 笔者在这块纠结了很久，如果过长而抛出 ExceedPayloadLimitException 异常，
+        // 那么 ChannelBuffer 是否重置下写入位置。后来发现自己煞笔了，每次 ChannelBuffer 都是新创建的，所以无需重置
+        // 为什么 Buffer 先写入了 Body ，再写入 Header 呢？因为 Header 中，里面 [96 - 127] 的 Body 长度，需要序列化后才得到
         checkPayload(channel, len);
+        // `[96 - 127]`：Body 的**长度**
         Bytes.int2bytes(len, header, 12);
-
+        // 写入 Header 到 Buffer
         // write
         buffer.writerIndex(savedWriteIndex);
         buffer.writeBytes(header); // write header.

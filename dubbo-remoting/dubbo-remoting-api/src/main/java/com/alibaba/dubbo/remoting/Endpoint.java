@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 /**
  * Endpoint. (API/SPI, Prototype, ThreadSafe)
  *
+ * 端点接口  在 dubbo-remoting-api 中，一个 Client 或 Server ，都是一个 Endpoint
  *
  * @see com.alibaba.dubbo.remoting.Channel
  * @see com.alibaba.dubbo.remoting.Client

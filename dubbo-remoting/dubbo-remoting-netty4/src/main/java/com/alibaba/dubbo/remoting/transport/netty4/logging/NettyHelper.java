@@ -24,6 +24,9 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 
 public class NettyHelper {
 
+    /**
+     * 设置 Netty 日志工厂为 DubboLoggerFactory
+     */
     public static void setNettyLoggerFactory() {
         InternalLoggerFactory factory = InternalLoggerFactory.getDefaultFactory();
         if (factory == null || !(factory instanceof DubboLoggerFactory)) {
@@ -40,7 +43,9 @@ public class NettyHelper {
     }
 
     static class DubboLogger extends AbstractInternalLogger {
-
+        /**
+         * 日志组件
+         */
         private Logger logger;
 
         DubboLogger(Logger logger) {

@@ -21,7 +21,7 @@ import java.net.InetSocketAddress;
 /**
  * Channel. (API/SPI, Prototype, ThreadSafe)
  *
- *
+ * 通道接口  和 Netty Channel 一致，通讯的载体
  *
  * @see com.alibaba.dubbo.remoting.Client
  * @see com.alibaba.dubbo.remoting.Server#getChannels()

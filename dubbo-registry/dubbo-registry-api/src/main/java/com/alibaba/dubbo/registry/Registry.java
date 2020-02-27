@@ -21,7 +21,7 @@ import com.alibaba.dubbo.common.URL;
 
 /**
  * Registry. (SPI, Prototype, ThreadSafe)
- *
+ * 注册中心接口
  * @see com.alibaba.dubbo.registry.RegistryFactory#getRegistry(URL)
  * @see com.alibaba.dubbo.registry.support.AbstractRegistry
  */

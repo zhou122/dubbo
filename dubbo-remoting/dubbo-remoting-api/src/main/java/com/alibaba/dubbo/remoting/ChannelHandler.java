@@ -22,6 +22,8 @@ import com.alibaba.dubbo.common.extension.SPI;
 /**
  * ChannelHandler. (API, Prototype, ThreadSafe)
  *
+ *  和 Netty ChannelHandler 一致，负责 Channel 中的逻辑处理  通道处理器接口
+ *
  * @see com.alibaba.dubbo.remoting.Transporter#bind(com.alibaba.dubbo.common.URL, ChannelHandler)
  * @see com.alibaba.dubbo.remoting.Transporter#connect(com.alibaba.dubbo.common.URL, ChannelHandler)
  */
