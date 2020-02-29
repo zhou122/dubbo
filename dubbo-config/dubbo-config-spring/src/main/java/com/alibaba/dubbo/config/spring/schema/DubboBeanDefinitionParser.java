@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
 
 /**
  * AbstractBeanDefinitionParser
- *
+ * 解析dubbo自定义标签
  * @export
  */
 public class DubboBeanDefinitionParser implements BeanDefinitionParser {
@@ -62,7 +62,8 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
      */
     private final Class<?> beanClass;
     /**
-     * 是否需要在 Bean 对象的编号( id ) 不存在时，自动生成编号。无需被其他应用引用的配置对象，无需自动生成编号。例如有 <dubbo:reference />
+     * 是否需要在 Bean 对象的编号( id ) 不存在时，自动生成编号。
+     * 无需被其他应用引用的配置对象，无需自动生成编号。例如有 <dubbo:reference />
      */
     private final boolean required;
 
@@ -146,7 +147,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         //循环 Bean 对象的 setting 方法，将属性赋值到 Bean 对象
         Set<String> props = new HashSet<String>();
         ManagedMap parameters = null;
-        // 循环 Bean 对象的 setting 方法，将属性添加到 Bean 对象的属性赋值
+        // 循环 Bean 对象的 setting 方法，将值添加到 Bean 对象对应的属性上
         for (Method setter : beanClass.getMethods()) {
             String name = setter.getName();
             if (name.length() > 3 && name.startsWith("set")
@@ -498,6 +499,12 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         }
     }
 
+    /**
+     * spring 中解析标签的方法，实现自BeanDefinitionParser
+     * @param element
+     * @param parserContext
+     * @return
+     */
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         return parse(element, parserContext, beanClass, required);
     }

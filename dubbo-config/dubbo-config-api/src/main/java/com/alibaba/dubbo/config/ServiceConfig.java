@@ -64,7 +64,7 @@ import static com.alibaba.dubbo.common.utils.NetUtils.isInvalidPort;
 
 /**
  * ServiceConfig
- *
+ * 服务提供者暴露服务配置类   属性参考《Dubbo 用户指南 —— dubbo:service》
  * @export
  */
 public class ServiceConfig<T> extends AbstractServiceConfig {
@@ -213,6 +213,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         return unexported;
     }
 
+    /**
+     * 暴露服务，主要做如下几件事情：
+     * 1.进一步初始化 ServiceConfig 对
+     * 2.校验 ServiceConfig 对象的配置项
+     * 3.使用 ServiceConfig 对象，生成 Dubbo URL 对象数组
+     * 4.使用 Dubbo URL 对象，暴露服务
+     */
     public synchronized void export() {
         // 当 export 或者 delay 未配置，从 ProviderConfig 对象读取
         if (provider != null) {
@@ -305,7 +312,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             } catch (ClassNotFoundException e) {
                 throw new IllegalStateException(e.getMessage(), e);
             }
-            // 校验接口和方法
+            // 校验是否为接口和方法是否在接口中存在
             checkInterfaceAndMethods(interfaceClass, methods);
             // 校验指向的 service 对象
             checkRef();
@@ -422,7 +429,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         if (ConfigUtils.getPid() > 0) {
             map.put(Constants.PID_KEY, String.valueOf(ConfigUtils.getPid()));
         }
-        // 将各种配置对象，添加到 `map` 集合中
+        // 将各种配置对象属性名和值，添加到 `map` 集合中
         appendParameters(map, application);
         appendParameters(map, module);
         appendParameters(map, provider, Constants.DEFAULT_KEY);
@@ -433,7 +440,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             for (MethodConfig method : methods) {
                 // 将 MethodConfig 对象，添加到 `map` 集合中
                 appendParameters(map, method, method.getName());
-                // 当 配置了 `MethodConfig.retry = false` 时，强制禁用重试
+                // 当 配置了 `MethodConfig.retry = false` 时，强制禁用重试，将retries次数设置为0次
                 String retryKey = method.getName() + ".retry";
                 if (map.containsKey(retryKey)) {
                     String retryValue = map.remove(retryKey);
@@ -568,8 +575,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         }
                         // 使用 ProxyFactory 创建 Invoker 对象
                         // 将服务体用这的 URL 作为 "export" 参数添加到注册中心的 URL 中。通过这样的方式，注册中心的 URL 中，包含了服务提供者的配置
+                        // 该 Invoker 对象，执行 #invoke(invocation) 方法时，内部会调用 Service 对象( ref )对应的调用方法
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));
-                        // 创建 DelegateProviderMetaDataInvoker 对象
+                        // 创建 DelegateProviderMetaDataInvoker 对象。该对象在 Invoker 对象的基础上，增加了当前服务提供者 ServiceConfig 对象
                         DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
                         // 使用 Protocol 暴露 Invoker 对象
                         /**
@@ -584,6 +592,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                          * 为什么是这样的顺序？通过这样的顺序，可以实现类似 AOP 的效果，在本地服务器启动完成后，再向注册中心注册
                          * 这也是为什么上文提到的 “为什么传递的是注册中心的 URL 呢？” 的原因
                          */
+                        //ProtocolFilterWrapper
                         Exporter<?> exporter = protocol.export(wrapperInvoker);
                         // 添加到 `exporters`
                         exporters.add(exporter);
@@ -637,25 +646,30 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * Configuration priority: environment variables -> java system properties -> host property in config file ->
      * /etc/hosts -> default network address -> first available network address
      *
-     * @param protocolConfig
-     * @param registryURLs
-     * @param map
+     * 查找主机 Host ，参见文档《主机绑定》https://dubbo.gitbooks.io/dubbo-user-book/demos/hostname-binding.html
+     * 推荐阅读文章《dubbo注册服务IP解析异常及IP解析源码分析》 https://segmentfault.com/a/1190000010550512
+     *
+     * @param protocolConfig  协议配置对象
+     * @param registryURLs  注册中心 URL 数组
+     * @param map  参数集合
      * @return
      */
     private String findConfigedHosts(ProtocolConfig protocolConfig, List<URL> registryURLs, Map<String, String> map) {
         boolean anyhost = false;
-
+        // 第一优先级，从环境变量，获得绑定的 Host，可强制指定
         String hostToBind = getValueFromConfig(protocolConfig, Constants.DUBBO_IP_TO_BIND);
-        if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {
+        if (hostToBind != null && hostToBind.length() > 0 && isInvalidLocalHost(hostToBind)) {//不能为本地ip,例如localhost,0.0.0.0,127.*.*.*
             throw new IllegalArgumentException("Specified invalid bind ip from property:" + Constants.DUBBO_IP_TO_BIND + ", value:" + hostToBind);
         }
 
         // if bind ip is not found in environment, keep looking up
         if (hostToBind == null || hostToBind.length() == 0) {
+            // 第二优先级，从 ProtocolConfig 获得 Host
             hostToBind = protocolConfig.getHost();
             if (provider != null && (hostToBind == null || hostToBind.length() == 0)) {
                 hostToBind = provider.getHost();
             }
+            // 第三优先级，若非合法的本地 Host ，使用 InetAddress.getLocalHost().getHostAddress() 获得 Host
             if (isInvalidLocalHost(hostToBind)) {
                 anyhost = true;
                 try {
@@ -663,6 +677,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                 } catch (UnknownHostException e) {
                     logger.warn(e.getMessage(), e);
                 }
+                // 第四优先级，若是非法的本地 Host ，通过使用 `registryURLs` 启动 Server ，并本地连接，获得 Host
                 if (isInvalidLocalHost(hostToBind)) {
                     if (registryURLs != null && !registryURLs.isEmpty()) {
                         for (URL registryURL : registryURLs) {
@@ -684,6 +699,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                             }
                         }
                     }
+                    // 第五优先级，若是非法的本地 Host ，获得本地网卡，第一个合法的 IP
                     if (isInvalidLocalHost(hostToBind)) {
                         hostToBind = getLocalHost();
                     }
@@ -693,6 +709,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         map.put(Constants.BIND_IP_KEY, hostToBind);
 
+        // 获得 `hostToRegistry` ，默认使用 `hostToBind`,可强制指定
         // registry ip is not used for bind ip by default
         String hostToRegistry = getValueFromConfig(protocolConfig, Constants.DUBBO_IP_TO_REGISTRY);
         if (hostToRegistry != null && hostToRegistry.length() > 0 && isInvalidLocalHost(hostToRegistry)) {
@@ -711,32 +728,37 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
      * Register port and bind port for the provider, can be configured separately
      * Configuration priority: environment variable -> java system properties -> port property in protocol config file
      * -> protocol default port
-     *
-     * @param protocolConfig
-     * @param name
-     * @return
+     * 查找端口
+     * @param protocolConfig  协议配置对象
+     * @param name  协议名
+     * @return  端口
      */
     private Integer findConfigedPorts(ProtocolConfig protocolConfig, String name, Map<String, String> map) {
         Integer portToBind = null;
-
+        // 第一优先级，从环境变量，获得绑定的 Port，可强制指定
         // parse bind port from environment
         String port = getValueFromConfig(protocolConfig, Constants.DUBBO_PORT_TO_BIND);
         portToBind = parsePort(port);
 
         // if there's no bind port found from environment, keep looking up.
         if (portToBind == null) {
+            // 第二优先级，从 ProtocolConfig 获得 Port
             portToBind = protocolConfig.getPort();
             if (provider != null && (portToBind == null || portToBind == 0)) {
                 portToBind = provider.getPort();
             }
+            // 第三优先级，获得协议对应的缺省端口
             final int defaultPort = ExtensionLoader.getExtensionLoader(Protocol.class).getExtension(name).getDefaultPort();
             if (portToBind == null || portToBind == 0) {
                 portToBind = defaultPort;
             }
+            // 第四优先级，随机获得端口
             if (portToBind == null || portToBind <= 0) {
-                portToBind = getRandomPort(name);
+                portToBind = getRandomPort(name);// 先从缓存中获得端口
                 if (portToBind == null || portToBind < 0) {
+                    // 获得可用端口
                     portToBind = getAvailablePort(defaultPort);
+                    // 添加到缓存
                     putRandomPort(name, portToBind);
                 }
                 logger.warn("Use random available port(" + portToBind + ") for protocol " + name);
@@ -745,7 +767,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
 
         // save bind port, used as url's key later
         map.put(Constants.BIND_PORT_KEY, String.valueOf(portToBind));
-
+        // 获得 `portToRegistry` ，默认使用 `portToBind` ，可强制指定
         // registry port, not used as bind port by default
         String portToRegistryStr = getValueFromConfig(protocolConfig, Constants.DUBBO_PORT_TO_REGISTRY);
         Integer portToRegistry = parsePort(portToRegistryStr);

@@ -23,7 +23,7 @@ import com.alibaba.dubbo.rpc.support.ProtocolUtils;
 
 /**
  * AbstractConsumerConfig
- *
+ * 抽象引用配置类  属性参考《Dubbo 用户指南 —— dubbo:reference》 或 《Dubbo 用户指南 —— dubbo:consumer》
  * @export
  * @see com.alibaba.dubbo.config.ReferenceConfig
  */

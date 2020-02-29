@@ -108,6 +108,7 @@ public class ProtocolFilterWrapper implements Protocol {
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
         // 注册中心  本地暴露服务不会符合这个判断。在远程暴露服务会符合暴露该判断；无需创建 Filter 过滤链
         if (Constants.REGISTRY_PROTOCOL.equals(invoker.getUrl().getProtocol())) {
+            //RegistryProtocol-->
             return protocol.export(invoker);
         }
         // 建立带有 Filter 过滤链的 Invoker ，再暴露服务

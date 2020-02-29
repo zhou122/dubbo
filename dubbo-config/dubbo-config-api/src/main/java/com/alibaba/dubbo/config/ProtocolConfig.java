@@ -35,7 +35,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * ProtocolConfig
- *
+ * 协议配置  对应《Dubbo 用户指南 —— dubbo:protocol》
+ * http://dubbo.apache.org/zh-cn/docs/user/references/xml/dubbo-protocol.html
  * @export
  */
 public class ProtocolConfig extends AbstractConfig {

@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * AbstractServiceConfig
- *
+ * 抽象服务配置类    属性参考《Dubbo 用户指南 —— dubbo:service》 或 《Dubbo 用户指南 —— dubbo:provider》
  * @export
  */
 public abstract class AbstractServiceConfig extends AbstractInterfaceConfig {

@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * MethodConfig
- *
+ * 方法级配置类  《Dubbo 用户指南 —— dubbo:method》
  * @export
  */
 public class MethodConfig extends AbstractMethodConfig {

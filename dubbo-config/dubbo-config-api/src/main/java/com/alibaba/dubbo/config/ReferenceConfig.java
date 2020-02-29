@@ -57,7 +57,7 @@ import static com.alibaba.dubbo.common.utils.NetUtils.isInvalidLocalHost;
 
 /**
  * ReferenceConfig
- *
+ * 服务消费者引用服务配置类  属性参考 《Dubbo 用户指南 —— dubbo:consumer》
  * @export
  */
 public class ReferenceConfig<T> extends AbstractReferenceConfig {
@@ -113,24 +113,35 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     public ReferenceConfig(Reference reference) {
         appendAnnotation(Reference.class, reference);
     }
-
+    /**
+     * 检查属性集合中的事件通知方法是否正确。
+     * 因为，此时方法配置的是字符串，需要通过反射获得 Method ，并添加到 attributes 。
+     * 其中，键为 {@link StaticContext#getKey(Map, String, String)} 方法获取。
+     *
+     * @param method 方法配置对象
+     * @param map 参数集合
+     * @param attributes 属性集合
+     */
     private static void checkAndConvertImplicitConfig(MethodConfig method, Map<String, String> map, Map<Object, Object> attributes) {
         //check config conflict
         if (Boolean.FALSE.equals(method.isReturn()) && (method.getOnreturn() != null || method.getOnthrow() != null)) {
             throw new IllegalStateException("method config error : return attribute must be set true when onreturn or onthrow has been setted.");
         }
+        // onreturn：将方法名字符串转换成方法
         //convert onreturn methodName to Method
         String onReturnMethodKey = StaticContext.getKey(map, method.getName(), Constants.ON_RETURN_METHOD_KEY);
         Object onReturnMethod = attributes.get(onReturnMethodKey);
         if (onReturnMethod != null && onReturnMethod instanceof String) {
             attributes.put(onReturnMethodKey, getMethodByName(method.getOnreturn().getClass(), onReturnMethod.toString()));
         }
+        // onthrow：将方法名字符串转换成方法
         //convert onthrow methodName to Method
         String onThrowMethodKey = StaticContext.getKey(map, method.getName(), Constants.ON_THROW_METHOD_KEY);
         Object onThrowMethod = attributes.get(onThrowMethodKey);
         if (onThrowMethod != null && onThrowMethod instanceof String) {
             attributes.put(onThrowMethodKey, getMethodByName(method.getOnthrow().getClass(), onThrowMethod.toString()));
         }
+        // oninvoke：将方法名字符串转换成方法
         //convert oninvoke methodName to Method
         String onInvokeMethodKey = StaticContext.getKey(map, method.getName(), Constants.ON_INVOKE_METHOD_KEY);
         Object onInvokeMethod = attributes.get(onInvokeMethodKey);
@@ -155,6 +166,14 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         return urls;
     }
 
+    /**
+     * 获取引用服务，主要做如下几件事：
+     * 1.进一步初始化 ReferenceConfig 对象
+     * 2.校验 ReferenceConfig 对象的配置项
+     * 3.使用 ReferenceConfig 对象，生成 Dubbo URL 对象数组
+     * 4.使用 Dubbo URL 对象，应用服务
+     * @return
+     */
     public synchronized T get() {
         // 已销毁，不可获得
         if (destroyed) {
@@ -399,6 +418,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
              *    实际上，Protocol 有两个 Wrapper 拓展实现类： ProtocolFilterWrapper、ProtocolListenerWrapper 。所以，#refer(...)
              * 方法的调用顺序是：Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => InjvmProtocol
              */
+            //RegistryProtocol-->DubboProtocol
             invoker = refprotocol.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
@@ -511,6 +531,10 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
         return (T) proxyFactory.getProxy(invoker);
     }
 
+    /**
+     * 校验 ConsumerConfig 配置。
+     * 实际上，会拼接属性配置（环境变量 + properties 属性）到 ConsumerConfig 对象。
+     */
     private void checkDefault() {
         if (consumer == null) {
             consumer = new ConsumerConfig();

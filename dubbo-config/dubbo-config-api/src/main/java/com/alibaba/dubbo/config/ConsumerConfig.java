@@ -18,7 +18,7 @@ package com.alibaba.dubbo.config;
 
 /**
  * ConsumerConfig
- *
+ * 服务消费者缺省值配置  属性参考《Dubbo 用户指南 —— dubbo:consumer》
  * @export
  */
 public class ConsumerConfig extends AbstractReferenceConfig {

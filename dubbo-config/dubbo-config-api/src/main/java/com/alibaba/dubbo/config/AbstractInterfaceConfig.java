@@ -43,7 +43,7 @@ import java.util.Map;
 
 /**
  * AbstractDefaultConfig
- *
+ * 属性参考《Dubbo 用户指南 —— dubbo:service》 或 《Dubbo 用户指南 —— dubbo:reference》
  * @export
  */
 public abstract class AbstractInterfaceConfig extends AbstractMethodConfig {

@@ -24,7 +24,7 @@ import java.util.Map;
 
 /**
  * AbstractMethodConfig
- *
+ * 方法级配置的抽象类  对应《Dubbo 用户指南 —— dubbo:method》
  * @export
  */
 public abstract class AbstractMethodConfig extends AbstractConfig {

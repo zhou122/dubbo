@@ -140,7 +140,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        //export invoker  暴露服务
+        //export invoker  暴露服务，用于本地启动服务
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
         // 获得注册中心 URL
         URL registryUrl = getRegistryUrl(originInvoker);
@@ -159,7 +159,7 @@ public class RegistryProtocol implements Protocol {
             register(registryUrl, registedProviderUrl);
             ProviderConsumerRegTable.getProviderWrapper(originInvoker).setReg(true);// 标记向本地注册表的注册服务提供者，已经注册
         }
-        // 使用 OverrideListener 对象，订阅配置规则
+        // 使用 OverrideListener 对象，订阅配置规则。集群容错
         // Subscribe the override data
         // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call the same service. Because the subscribed is cached key with the name of the service, it causes the subscription information to cover.
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
@@ -167,6 +167,7 @@ public class RegistryProtocol implements Protocol {
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //Ensure that a new exporter instance is returned every time export
+        //创建 DestroyableExporter 对象
         return new DestroyableExporter<T>(exporter, originInvoker, overrideSubscribeUrl, registedProviderUrl);
     }
 
@@ -190,7 +191,7 @@ public class RegistryProtocol implements Protocol {
                 if (exporter == null) {
                     // 创建 Invoker Delegate 对象
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
-                    // 暴露服务，创建 Exporter 对象
+                    // 调用 DubboProtocol#export(invoker) 方法，暴露服务，返回 Exporter 对象
                     // 使用 创建的Exporter对象 + originInvoker ，创建 ExporterChangeableWrapper 对象
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
                     // 添加到 `bounds`
