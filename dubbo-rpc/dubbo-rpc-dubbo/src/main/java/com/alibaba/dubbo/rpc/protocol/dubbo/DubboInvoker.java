@@ -91,6 +91,7 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
         inv.setAttachment(Constants.VERSION_KEY, version);
         // 获得 ExchangeClient 对象
         ExchangeClient currentClient;
+        //DubboProtocol#refer中调用getClients创建的远程通信客户端数组
         if (clients.length == 1) {
             currentClient = clients[0];
         } else {
@@ -107,6 +108,8 @@ public class DubboInvoker<T> extends AbstractInvoker<T> {
             // 单向调用  发送消息，而不是请求
             if (isOneway) {
                 boolean isSent = getUrl().getMethodParameter(methodName, Constants.SENT_KEY, false);
+                //DubboProtocol#refer中调用getClients创建的远程通信客户端数组
+                //HeaderExchangeClient,LazyConnectExchangeClient
                 currentClient.send(inv, isSent);
                 RpcContext.getContext().setFuture(null);//无需 FutureFilter ，异步回调
                 return new RpcResult();

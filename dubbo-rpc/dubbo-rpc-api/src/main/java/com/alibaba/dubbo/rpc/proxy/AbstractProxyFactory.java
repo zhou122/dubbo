@@ -31,6 +31,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
         Class<?>[] interfaces = null;
         String config = invoker.getUrl().getParameter("interfaces");
+        //测试类中config值为空
         if (config != null && config.length() > 0) {
             String[] types = Constants.COMMA_SPLIT_PATTERN.split(config);
             if (types != null && types.length > 0) {
@@ -46,9 +47,11 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
         if (interfaces == null) {
             interfaces = new Class<?>[]{invoker.getInterface(), EchoService.class};
         }
+        //由JavassistProxyFactory和JdkProxyFactory实现，分别表示使用javassist和jdk动态代理
         return getProxy(invoker, interfaces);
     }
 
+    //由JavassistProxyFactory和JdkProxyFactory实现，分别表示使用javassist和jdk动态代理
     public abstract <T> T getProxy(Invoker<T> invoker, Class<?>[] types);
 
 }

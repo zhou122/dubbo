@@ -36,10 +36,11 @@ public class InvokerInvocationHandler implements InvocationHandler {
         this.invoker = handler;
     }
 
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
-        // wait 等方法，直接反射调用
+        // Object中的wait 等方法，直接反射调用
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
@@ -53,7 +54,7 @@ public class InvokerInvocationHandler implements InvocationHandler {
         if ("equals".equals(methodName) && parameterTypes.length == 1) {
             return invoker.equals(args[0]);
         }
-        // RPC 调用
+        // 调用封装后的invoker#invoke方法执行RPC 调用
         return invoker.invoke(new RpcInvocation(method, args)).recreate();
     }
 

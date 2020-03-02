@@ -408,6 +408,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrls() {
         // 加载注册中心 URL 数组
+        // registry://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&pid=3304&qos.port=22222&registry=zookeeper&timestamp=1583031708946
         List<URL> registryURLs = loadRegistries(true);
         // 循环 `protocols` ，向逐个注册中心分组暴露服务.包含了本地和远程两种暴露方式
         for (ProtocolConfig protocolConfig : protocols) {
@@ -534,9 +535,13 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
             contextPath = provider.getContextpath();
         }
 
+        //服务提供者ip
         String host = this.findConfigedHosts(protocolConfig, registryURLs, map);
+        //服务提供者端口
         Integer port = this.findConfigedPorts(protocolConfig, name, map);
         // 创建 Dubbo URL 对象
+        // path:接口名称
+        //dubbo://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=169.254.232.73&bind.port=20880&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=3304&qos.port=22222&side=provider&timestamp=1583031792983
         URL url = new URL(name, host, port, (contextPath == null || contextPath.length() == 0 ? "" : contextPath + "/") + path, map);
         // 配置规则，参见《配置规则》http://dubbo.apache.org/zh-cn/docs/user/demos/config-rule.html
         if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
@@ -573,7 +578,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         if (logger.isInfoEnabled()) {
                             logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
                         }
-                        // 使用 ProxyFactory 创建 Invoker 对象
+                        // 使用 ProxyFactory 创建 Invoker 对象    StubProxyFactoryWrapper
                         // 将服务体用这的 URL 作为 "export" 参数添加到注册中心的 URL 中。通过这样的方式，注册中心的 URL 中，包含了服务提供者的配置
                         // 该 Invoker 对象，执行 #invoke(invocation) 方法时，内部会调用 Service 对象( ref )对应的调用方法
                         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(Constants.EXPORT_KEY, url.toFullString()));

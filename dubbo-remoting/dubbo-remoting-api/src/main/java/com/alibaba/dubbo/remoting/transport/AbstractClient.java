@@ -106,8 +106,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
         // The default reconnection interval is 2s, 1800 means warning interval is 1 hour.
         reconnect_warning_period = url.getParameter("reconnect.waring.period", 1800);
-        // 初始化客户端
+
         try {
+            // 初始化客户端
             doOpen();
         } catch (Throwable t) {
             close();// 失败，则关闭
@@ -115,8 +116,9 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                     "Failed to start " + getClass().getSimpleName() + " " + NetUtils.getLocalAddress()
                             + " connect to the server " + getRemoteAddress() + ", cause: " + t.getMessage(), t);
         }
-        // 连接服务器
+
         try {
+            // 连接服务器
             // connect.
             connect();
             if (logger.isInfoEnabled()) {

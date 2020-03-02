@@ -54,7 +54,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
-        // 创建 Server 对象
+        // 创建 Server 对象   有mina，netty3和netty4多种实现
         return getTransporter().bind(url, handler);
     }
 
@@ -74,6 +74,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        //创建client对象  有mina，netty3和netty4多种实现
         return getTransporter().connect(url, handler);
     }
 

@@ -145,7 +145,7 @@ public class DubboProtocol extends AbstractProtocol {
             invoke(channel, Constants.ON_DISCONNECT_KEY);
         }
         /**
-         * 调用方法
+         * 调用方法  私有方法，由上面的connected和disconnected调用
          *
          * @param channel 通道
          * @param methodKey 方法名
@@ -248,10 +248,12 @@ public class DubboProtocol extends AbstractProtocol {
     }
 
     public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        //服务提供者封装后的url
         URL url = invoker.getUrl();
 
         // 创建 DubboExporter 对象，并添加到 `exporterMap`
         // export service.
+        // com.alibaba.dubbo.demo.DemoService:20880
         String key = serviceKey(url);
         DubboExporter<T> exporter = new DubboExporter<T>(invoker, key, exporterMap);
         exporterMap.put(key, exporter);
@@ -279,10 +281,11 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * 启动服务器
-     * @param url
+     * @param url 服务提供者封装后的url
+     * dubbo://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=169.254.232.73&bind.port=20880&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10492&qos.port=22222&side=provider&timestamp=1583033253044
      */
     private void openServer(URL url) {
-        // find server. 获得服务器地址
+        // find server. 获得服务器地址   169.254.232.73:20880
         String key = url.getAddress();
         //client can export a service which's only for server to invoke
         boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
@@ -300,17 +303,18 @@ public class DubboProtocol extends AbstractProtocol {
 
     /**
      * 创建并启动通信服务器
-     * @param url
+     * @param url  服务提供者封装后的url
+     * dubbo://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&bind.ip=169.254.232.73&bind.port=20880&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=10492&qos.port=22222&side=provider&timestamp=1583033253044
      * @return
      */
     private ExchangeServer createServer(URL url) {
-        // 默认开启 server 关闭时发送 READ_ONLY 事件
+        // 默认开启 server 关闭时发送 READ_ONLY 事件    Constants.CHANNEL_READONLYEVENT_SENT_KEY-->channel.readonly.sent
         // send readonly event when server closes, it's enabled by default
         url = url.addParameterIfAbsent(Constants.CHANNEL_READONLYEVENT_SENT_KEY, Boolean.TRUE.toString());
-        // 默认开启 heartbeat
+        // 默认开启 heartbeat      Constants.HEARTBEAT_KEY-->heartbeat
         // enable heartbeat by default
         url = url.addParameterIfAbsent(Constants.HEARTBEAT_KEY, String.valueOf(Constants.DEFAULT_HEARTBEAT));
-        // 校验 Server 的 Dubbo SPI 拓展是否存在
+        // 校验 Server 的 Dubbo SPI 拓展是否存在     Constants.SERVER_KEY-->server
         String str = url.getParameter(Constants.SERVER_KEY, Constants.DEFAULT_REMOTING_SERVER);
         if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str))
             throw new RpcException("Unsupported server type: " + str + ", url: " + url);
@@ -368,6 +372,14 @@ public class DubboProtocol extends AbstractProtocol {
         }
     }
 
+    /**
+     *
+     * @param serviceType  消费者接口  interface com.alibaba.dubbo.demo.DemoService
+     * @param url  URL address for the remote service  消费者封装成的URL
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     public <T> Invoker<T> refer(Class<T> serviceType, URL url) throws RpcException {
         // 初始化序列化优化器
         optimizeSerialization(url);

@@ -386,6 +386,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+        //temp://localhost?application=demo-consumer&check=false&dubbo=2.0.0&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=14872&qos.port=33333&register.ip=169.254.232.73&side=consumer&timestamp=1583036038868
         //protocol = temp 的原因是，在下面的InjvmProtocol.getInjvmProtocol().isInjvmRefer(tmpUrl)，已经直接使用了 InjvmProtocol ，而不需要通过该值去获取
         URL tmpUrl = new URL("temp", "localhost", 0, map);
         // 是否本地引用
@@ -450,6 +451,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
              // 注册中心
             } else { // assemble URL from register center's configuration
                 // 加载注册中心 URL 数组
+                // registry://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.0&pid=14872&qos.port=33333&registry=zookeeper&timestamp=1583036169342
                 List<URL> us = loadRegistries(false);
                 // 循环数组，添加到 `url` 中
                 if (us != null && !us.isEmpty()) {
@@ -468,7 +470,8 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     throw new IllegalStateException("No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
                 }
             }
-            // 单 `urls` 时，引用服务，返回 Invoker 对象
+            // 单 `urls` 时，引用服务，返回 Invoker 对象;注册中心的地址，带上服务引用的配置参数
+            // registry://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.0&pid=12908&qos.port=33333&refer=application%3Ddemo-consumer%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D12908%26qos.port%3D33333%26register.ip%3D169.254.232.73%26side%3Dconsumer%26timestamp%3D1583036388850&registry=zookeeper&timestamp=1583036391258
             if (urls.size() == 1) {
                 // 引用服务
                 /**
@@ -486,6 +489,11 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                  *
                  * 为什么是这样的顺序？通过这样的顺序，可以实现类似 AOP 的效果，在获取服务提供者列表后，再创建连接服务提供者的客户端
                  */
+                /**
+                 * interfaceClass:interface com.alibaba.dubbo.demo.DemoService
+                 * urls:registry://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.0&pid=9864&qos.port=33333&refer=application%3Ddemo-consumer%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D9864%26qos.port%3D33333%26register.ip%3D169.254.232.73%26side%3Dconsumer%26timestamp%3D1583036648727&registry=zookeeper&timestamp=1583036650321
+                 */
+                //RegistryProtocol-->DubboProtocol
                 invoker = refprotocol.refer(interfaceClass, urls.get(0));
             } else {
                 // 循环 `urls` ，引用服务，返回 Invoker 对象
@@ -527,7 +535,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             logger.info("Refer dubbo service " + interfaceClass.getName() + " from url " + invoker.getUrl());
         }
         // 创建 Service 代理对象
-        // create service proxy
+        // create service proxy    StubProxyFactoryWrapper
         return (T) proxyFactory.getProxy(invoker);
     }
 

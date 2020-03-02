@@ -136,6 +136,7 @@ public class RegistryProtocol implements Protocol {
 
     public void register(URL registryUrl, URL registedProviderUrl) {
         Registry registry = registryFactory.getRegistry(registryUrl);
+        //FailbackRegistry
         registry.register(registedProviderUrl);
     }
 
@@ -143,11 +144,13 @@ public class RegistryProtocol implements Protocol {
         //export invoker  暴露服务，用于本地启动服务
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
         // 获得注册中心 URL
+        // zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&export=dubbo%3A%2F%2F169.254.232.73%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D169.254.232.73%26bind.port%3D20880%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D3308%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1583034085877&pid=3308&qos.port=22222&timestamp=1583034085862
         URL registryUrl = getRegistryUrl(originInvoker);
 
         //registry provider  获得注册中心对象
         final Registry registry = getRegistry(originInvoker);
         // 获得服务提供者 URL
+        // dubbo://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=3308&side=provider&timestamp=1583034085877
         final URL registedProviderUrl = getRegistedProviderUrl(originInvoker);
 
         //to judge to delay publish whether or not
@@ -300,6 +303,14 @@ public class RegistryProtocol implements Protocol {
         return key;
     }
 
+    /**
+     *
+     * @param type Service class   interface com.alibaba.dubbo.demo.DemoService
+     * @param url  URL address for the remote service   zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-consumer&dubbo=2.0.0&pid=8816&qos.port=33333&refer=application%3Ddemo-consumer%26check%3Dfalse%26dubbo%3D2.0.0%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D8816%26qos.port%3D33333%26register.ip%3D169.254.232.73%26side%3Dconsumer%26timestamp%3D1583037368858&timestamp=1583037370233
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
         // 获得真实的注册中心的 URL
@@ -335,7 +346,7 @@ public class RegistryProtocol implements Protocol {
      * @param cluster  Cluster 对象
      * @param registry  注册中心对象
      * @param type  服务接口类型
-     * @param url  注册中心 URL
+     * @param url  注册中心 URL(其中refer属性包含了消费者链接信息)
      * @param <T>  泛型
      * @return Invoker 对象
      */
@@ -347,6 +358,7 @@ public class RegistryProtocol implements Protocol {
         // 创建订阅 URL
         // all attributes of REFER_KEY
         Map<String, String> parameters = new HashMap<String, String>(directory.getUrl().getParameters());// 服务引用配置集合
+        //consumer://169.254.232.73/com.alibaba.dubbo.demo.DemoService?application=demo-consumer&check=false&dubbo=2.0.0&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=13460&qos.port=33333&side=consumer&timestamp=1583037439044
         URL subscribeUrl = new URL(Constants.CONSUMER_PROTOCOL, parameters.remove(Constants.REGISTER_IP_KEY), 0, type.getName(), parameters);
         // 向注册中心注册自己（服务消费者）
         if (!Constants.ANY_VALUE.equals(url.getServiceInterface())
@@ -354,12 +366,15 @@ public class RegistryProtocol implements Protocol {
             registry.register(subscribeUrl.addParameters(Constants.CATEGORY_KEY, Constants.CONSUMERS_CATEGORY,
                     Constants.CHECK_KEY, String.valueOf(false)));
         }
-        // 向注册中心订阅服务提供者
+        // 向注册中心订阅服务提供者(和配置，路由信息)
+        // 在该方法中，会循环获得到的服务体用这列表，调用 Protocol#refer(type, url) 方法，创建每个调用服务的 Invoker 对象
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                 Constants.PROVIDERS_CATEGORY
                         + "," + Constants.CONFIGURATORS_CATEGORY
                         + "," + Constants.ROUTERS_CATEGORY));
-        // 创建 Invoker 对象
+        //调用具体的通信协议的refer方法，例如DubboProtocol#refer
+        // 通过集群容错cluster创建 Invoker 对象
+        // 常见的容错方法有FailfastCluster,FailoverCluster（以此为例）,FailsafeCluster
         Invoker invoker = cluster.join(directory);
         // 向本地注册表，注册消费者
         ProviderConsumerRegTable.registerConsumer(invoker, url, subscribeUrl, directory);

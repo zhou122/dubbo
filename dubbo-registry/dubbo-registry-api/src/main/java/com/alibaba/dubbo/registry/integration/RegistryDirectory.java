@@ -154,8 +154,13 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
         this.registry = registry;
     }
 
+    /**
+     * 订阅信息
+     * @param url
+     */
     public void subscribe(URL url) {
         setConsumerUrl(url);
+        //FailbackRegistry
         registry.subscribe(url, this);
     }
 

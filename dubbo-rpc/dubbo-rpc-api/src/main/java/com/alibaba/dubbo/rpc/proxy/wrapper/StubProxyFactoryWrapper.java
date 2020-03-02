@@ -58,13 +58,21 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
         this.protocol = protocol;
     }
 
+    /**
+     * 消费方创建代理
+     * @param invoker
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> T getProxy(Invoker<T> invoker) throws RpcException {
-        // 获得 Service Proxy 对象
+        // 获得 Service Proxy 对象    AbstractProxyFactory
         T proxy = proxyFactory.getProxy(invoker);
         if (GenericService.class != invoker.getInterface()) {// 非泛化引用
             // 获得 `stub` 配置项
             String stub = invoker.getUrl().getParameter(Constants.STUB_KEY, invoker.getUrl().getParameter(Constants.LOCAL_KEY));
+            // 测试类暂时没有stub
             if (ConfigUtils.isNotEmpty(stub)) {
                 Class<?> serviceType = invoker.getInterface();
                 // `stub = true` 的情况，使用接口 + `Stub` 字符串
@@ -108,7 +116,17 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
         return proxy;
     }
 
+    /**
+     * 服务方创建invoker对象
+     * @param proxy
+     * @param type
+     * @param url
+     * @param <T>
+     * @return
+     * @throws RpcException
+     */
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException {
+        //JavassistProxyFactory和JdkProxyFactory
         return proxyFactory.getInvoker(proxy, type, url);
     }
 

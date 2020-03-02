@@ -67,6 +67,7 @@ public class Exchangers {
             throw new IllegalArgumentException("handler == null");
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+        //HeaderExchanger
         return getExchanger(url).bind(url, handler);
     }
 
@@ -106,6 +107,7 @@ public class Exchangers {
             throw new IllegalArgumentException("handler == null");
         }
         url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+        //HeaderExchanger
         return getExchanger(url).connect(url, handler);
     }
 

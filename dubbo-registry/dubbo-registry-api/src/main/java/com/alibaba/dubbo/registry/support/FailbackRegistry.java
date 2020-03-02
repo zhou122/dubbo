@@ -143,6 +143,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 将封装好的服务提供者url注册到注册中心
+     * @param url
+     */
     @Override
     public void register(URL url) {
         // 添加到 `registered` 变量
@@ -153,6 +157,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         // 向注册中心发送注册请求
         try {
             // Sending a registration request to the server side
+            // RedisRegistry,zookeeperRegistry
             doRegister(url);
         } catch (Exception e) {
             Throwable t = e;
@@ -218,6 +223,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         // 向注册中心发送订阅请求
         try {
             // Sending a subscription request to the server side
+            // redisRegistry  zookeeperRegistry
             doSubscribe(url, listener);
         } catch (Exception e) {
             Throwable t = e;
@@ -308,6 +314,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     protected void doNotify(URL url, NotifyListener listener, List<URL> urls) {
+        //AbstractRegistry
         super.notify(url, listener, urls);
     }
 

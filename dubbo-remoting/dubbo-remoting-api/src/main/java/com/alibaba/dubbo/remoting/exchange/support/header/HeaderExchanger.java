@@ -46,6 +46,14 @@ public class HeaderExchanger implements Exchanger {
         return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
     }
 
+    /**
+     * 传入的 handler 处理器，内嵌到 HeaderExchangeHandler ，再进一步内嵌到 DecodeHandler 中。
+     * 所以，处理器的顺序是：DecodeHandler => HeaderExchangeHandler => ExchangeHandler( handler )
+     * @param url server url
+     * @param handler 数据交换处理器
+     * @return
+     * @throws RemotingException
+     */
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
         return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
     }
