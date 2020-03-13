@@ -216,7 +216,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     @Override
     public void subscribe(URL url, NotifyListener listener) {
-        // 移除出 `subscribed` 变量
+        // 向url上添加一个listener监听  AbstractRegistry
         super.subscribe(url, listener);
         // 移除出 `failedSubscribed` `failedUnsubscribed` `failedNotified`
         removeFailedSubscribed(url, listener);

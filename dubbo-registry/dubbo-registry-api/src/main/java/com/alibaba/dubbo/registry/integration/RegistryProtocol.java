@@ -134,16 +134,22 @@ public class RegistryProtocol implements Protocol {
         return overrideListeners;
     }
 
+    /**
+     * 向注册中心注册服务
+     * @param registryUrl   zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&export=dubbo%3A%2F%2F169.254.232.73%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D169.254.232.73%26bind.port%3D20880%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D3308%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1583034085877&pid=3308&qos.port=22222&timestamp=1583034085862
+     * @param registedProviderUrl  dubbo://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=3308&side=provider&timestamp=1583034085877
+     */
     public void register(URL registryUrl, URL registedProviderUrl) {
+        //获取注册中心对象   AbstractRegistryFactory
         Registry registry = registryFactory.getRegistry(registryUrl);
-        //FailbackRegistry
+        //向注册中心注册服务  FailbackRegistry
         registry.register(registedProviderUrl);
     }
 
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
         //export invoker  暴露服务，用于本地启动服务
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
-        // 获得注册中心 URL
+        // 获得注册中心 URL,其中的export包含了要注册的服务的地址
         // zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&export=dubbo%3A%2F%2F169.254.232.73%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D169.254.232.73%26bind.port%3D20880%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D3308%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1583034085877&pid=3308&qos.port=22222&timestamp=1583034085862
         URL registryUrl = getRegistryUrl(originInvoker);
 
@@ -165,9 +171,12 @@ public class RegistryProtocol implements Protocol {
         // 使用 OverrideListener 对象，订阅配置规则。集群容错
         // Subscribe the override data
         // FIXME When the provider subscribes, it will affect the scene : a certain JVM exposes the service and call the same service. Because the subscribed is cached key with the name of the service, it causes the subscription information to cover.
+        // 当提供者订阅时，它将影响:某个JVM公开服务并调用相同的服务。因为订阅是按服务名称缓存的，所以它会导致订阅信息被覆盖。
+        // 添加category=configurators属性，provider://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=16604&side=provider&timestamp=1583208804060
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
+        //FailbackRegistry
         registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         //Ensure that a new exporter instance is returned every time export
         //创建 DestroyableExporter 对象

@@ -74,18 +74,22 @@ public class ZookeeperRegistry extends FailbackRegistry {
      */
     private final ZookeeperClient zkClient;
 
+    /**
+     * @param url  注册中心URL
+     * @param zookeeperTransporter
+     */
     public ZookeeperRegistry(URL url, ZookeeperTransporter zookeeperTransporter) {
         super(url);
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
-        // 获得 Zookeeper 根节点
+        // 获得 Zookeeper 根节点，默认为dubbo
         String group = url.getParameter(Constants.GROUP_KEY, DEFAULT_ROOT);
         if (!group.startsWith(Constants.PATH_SEPARATOR)) {
             group = Constants.PATH_SEPARATOR + group;
         }
         this.root = group;
-        // 创建 Zookeeper Client
+        // 创建 Zookeeper Client,有curator和zkClient两种实现
         // 基于 Dubbo SPI Adaptive 机制，根据 url 参数，加载对应的 ZookeeperTransporter 实现类，创建对应的 ZookeeperClient 实现类的对应
         zkClient = zookeeperTransporter.connect(url);
         // 添加 StateListener 对象。该监听器，在重连时，调用恢复方法
@@ -131,6 +135,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
         try {
             //url.parameters.dynamic ，是否动态数据。若为 false ，该数据为持久数据，当注册方退出时，数据依然保存在注册中心
             //调用 ZookeeperClient#create(url, ephemeral) 方法，创建 URL 节点，即在在流程图中看到的 URL 层
+            //  例如注册服务提供者节点： /dubbo/com.alibaba.dubbo.demo.DemoService/providers/dubbo%3A%2F%2F169.254.232.73%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D17404%26side%3Dprovider%26timestamp%3D1583219309576
             zkClient.create(toUrlPath(url), url.getParameter(Constants.DYNAMIC_KEY, true));
         } catch (Throwable e) {
             throw new RpcException("Failed to register " + url + " to zookeeper " + getUrl() + ", cause: " + e.getMessage(), e);
@@ -145,6 +150,14 @@ public class ZookeeperRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * 1.服务提供者订阅时
+     * @param url  provider://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=18760&side=provider&timestamp=1583217644854
+     * @param listener 由url和invoker组成的对象   OverrideListener
+     * 2.服务消费者订阅时
+     * @param url  provider://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=18760&side=provider&timestamp=1583217644854
+     * @param listener 由registry和protocol组成的对象  RegistryDirectory
+     */
     protected void doSubscribe(final URL url, final NotifyListener listener) {
         try {
             // 处理所有 Service 层的发起订阅，例如监控中心的订阅
@@ -192,6 +205,8 @@ public class ZookeeperRegistry extends FailbackRegistry {
                 // 子节点数据数组
                 List<URL> urls = new ArrayList<URL>();
                 // 循环分类数组
+                // 服务提供者会订阅/dubbo/com.alibaba.dubbo.demo.DemoService/configurators目录
+                // 服务消费者会订阅/dubbo/com.alibaba.dubbo.demo.DemoService/providers，configurators和routers三个目录
                 for (String path : toCategoriesPath(url)) {
                     // 获得 url 对应的监听器集合
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.get(url);

@@ -104,7 +104,7 @@ public abstract class AbstractRegistry implements Registry {
     /**
      * 订阅 URL 的监听器集合
      *
-     * key：消费者的 URL ，例如消费者的 URL
+     * key：消费者订阅的 URL（可以向服务提供者providers，路由routes和配置configurations订阅） ,value:对应的监听器
      */
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
     /**
@@ -134,7 +134,7 @@ public abstract class AbstractRegistry implements Registry {
         //properties 发生变更时候，是同步还是异步写入 file
         // Start file save timer
         syncSaveFile = url.getParameter(Constants.REGISTRY_FILESAVE_SYNC_KEY, false);
-        // 获得 `file`
+        // 获得 `file`  C:\Users\computerUser/.dubbo/dubbo-registry-demo-provider-127.0.0.1:2181.cache
         String filename = url.getParameter(Constants.FILE_KEY, System.getProperty("user.home") + "/.dubbo/dubbo-registry-" + url.getParameter(Constants.APPLICATION_KEY) + "-" + url.getAddress() + ".cache");
         File file = null;
         if (ConfigUtils.isNotEmpty(filename)) {
@@ -149,6 +149,7 @@ public abstract class AbstractRegistry implements Registry {
         // 加载本地磁盘缓存文件到内存缓存
         loadProperties();
         // 通知监听器，URL 变化结果
+        //zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&interface=com.alibaba.dubbo.registry.RegistryService&pid=11928&qos.port=22222&timestamp=1583206205528
         notify(url.getBackupUrls());
     }
 
@@ -417,11 +418,12 @@ public abstract class AbstractRegistry implements Registry {
             if (!UrlUtils.isMatch(url, urls.get(0))) {
                 continue;
             }
-
+            //通知监听器
             Set<NotifyListener> listeners = entry.getValue();
             if (listeners != null) {
                 for (NotifyListener listener : listeners) {
                     try {
+                        //通知监听器，URL 变化结果
                         notify(url, listener, filterEmpty(url, urls));
                     } catch (Throwable t) {
                         logger.error("Failed to notify registry event, urls: " + urls + ", cause: " + t.getMessage(), t);
@@ -436,11 +438,10 @@ public abstract class AbstractRegistry implements Registry {
       * 通知监听器，URL 变化结果
       * 数据流向 `urls` => {@link #notified} => {@link #properties} => {@link #file}
       * 第一，向注册中心发起订阅后，会获取到全量数据，此时会被调用 #notify(...) 方法，即 Registry 获取到了全量数据。
-      * 第二，每次注册中心发生变更时，会调用 #notify(...) 方法，虽然变化是增量，调用这个方法的调用方，已经进行处理，传入的 urls 依然是全量的。
-      * 这里有一点要注意，每次传入的 urls 的“全量”，指的是至少要是一个分类的全量，而不一定是全部数据
+      * 第二，每次注册中心发生变更时，会调用 #notify(...) 方法，进行增量变更（某个变化了的service信息）
       * @param url  消费者 URL
       * @param listener  监听器
-      * @param urls  通知的 URL 变化结果（全量数据）
+      * @param urls  通知的 URL 变化结果
       */
     protected void notify(URL url, NotifyListener listener, List<URL> urls) {
         if (url == null) {
