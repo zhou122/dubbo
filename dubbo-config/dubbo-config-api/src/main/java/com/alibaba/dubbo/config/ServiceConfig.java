@@ -596,6 +596,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                          * 再次调用 Protocol$Adaptive 获取到的是 DubboProtocol 对象，进行服务暴露
                          * 为什么是这样的顺序？通过这样的顺序，可以实现类似 AOP 的效果，在本地服务器启动完成后，再向注册中心注册
                          * 这也是为什么上文提到的 “为什么传递的是注册中心的 URL 呢？” 的原因
+                         * ##ExtensionLoader#createExtension中会创建 Wrapper 拓展对象，将 instance 包装在其中
                          */
                         //ProtocolFilterWrapper
                         Exporter<?> exporter = protocol.export(wrapperInvoker);

@@ -32,15 +32,14 @@ public class Consumer {
         while (true) {
             try {
                 Thread.sleep(1000*60*60);
+                /*Thread.sleep(1000*5);*/
                 String hello = demoService.sayHello("world"); // call remote method
                 System.out.println(hello); // get result
-
+                String toString = demoService.toString();
+                System.out.println(toString);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
-
-
         }
-
     }
 }

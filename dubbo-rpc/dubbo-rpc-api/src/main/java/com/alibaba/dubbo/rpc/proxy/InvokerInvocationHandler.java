@@ -40,11 +40,11 @@ public class InvokerInvocationHandler implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         Class<?>[] parameterTypes = method.getParameterTypes();
-        // Object中的wait 等方法，直接反射调用
+        // Object中的所有(wait 等)方法，直接反射调用
         if (method.getDeclaringClass() == Object.class) {
             return method.invoke(invoker, args);
         }
-        // 基础方法，不使用 RPC 调用
+        // 重写的基础方法，不使用 RPC 调用
         if ("toString".equals(methodName) && parameterTypes.length == 0) {
             return invoker.toString();
         }

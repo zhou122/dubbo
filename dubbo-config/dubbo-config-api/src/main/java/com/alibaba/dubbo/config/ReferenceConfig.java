@@ -418,6 +418,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
              * 根据 invoker.url 自动获得对应 Protocol 拓展实现为 InjvmProtocol
              *    实际上，Protocol 有两个 Wrapper 拓展实现类： ProtocolFilterWrapper、ProtocolListenerWrapper 。所以，#refer(...)
              * 方法的调用顺序是：Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => InjvmProtocol
+             * ##ExtensionLoader#createExtension中会创建 Wrapper 拓展对象，将 instance 包装在其中
              */
             //RegistryProtocol-->DubboProtocol
             invoker = refprotocol.refer(interfaceClass, url);
@@ -479,14 +480,14 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                  * invoker 传入后，根据 invoker.url 自动获得对应 Protocol 拓展实现为 DubboProtocol
                  *      实际上，Protocol 有两个 Wrapper 拓展实现类： ProtocolFilterWrapper、ProtocolListenerWrapper 。
                  * 所以，#export(...) 方法的调用顺序是：
-                 * Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => RegistryProtocol
+                 * Protocol$Adaptive(通过拼接代码字符串动态生成) => ProtocolFilterWrapper => ProtocolListenerWrapper => RegistryProtocol
                  * =>
-                 * Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => DubboProtocol
+                 * Protocol$Adaptive(通过拼接代码字符串动态生成) => ProtocolFilterWrapper => ProtocolListenerWrapper => DubboProtocol
                  * 也就是说，这一条大的调用链，包含两条小的调用链。原因是：
                  * 首先，传入的是注册中心的 URL ，通过 Protocol$Adaptive 获取到的是 RegistryProtocol 对象
                  * 其次，RegistryProtocol 会在其 #refer(...) 方法中，使用服务提供者的 URL ( 即注册中心的 URL 的 refer 参数值)，
                  * 再次调用 Protocol$Adaptive 获取到的是 DubboProtocol 对象，进行服务暴露
-                 *
+                 * ##ExtensionLoader#createExtension中会创建 Wrapper 拓展对象，将 instance 包装在其中
                  * 为什么是这样的顺序？通过这样的顺序，可以实现类似 AOP 的效果，在获取服务提供者列表后，再创建连接服务提供者的客户端
                  */
                 /**

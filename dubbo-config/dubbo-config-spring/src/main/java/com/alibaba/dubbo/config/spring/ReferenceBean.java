@@ -61,6 +61,11 @@ public class ReferenceBean<T> extends ReferenceConfig<T> implements FactoryBean,
         SpringExtensionFactory.addApplicationContext(applicationContext);
     }
 
+    /**
+     * 重写了FactoryBean的方法，Bean初始化属性注入时会调用
+     * @return
+     * @throws Exception
+     */
     public Object getObject() throws Exception {
         return get();
     }
