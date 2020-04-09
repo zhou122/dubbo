@@ -322,7 +322,7 @@ public class RegistryProtocol implements Protocol {
      */
     @SuppressWarnings("unchecked")
     public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
-        // 获得真实的注册中心的 URL
+        // 获得真实的注册中心的 URL，替换注册中心协议，例如将站位的registry替换成zookeeper协议
         url = url.setProtocol(url.getParameter(Constants.REGISTRY_KEY, Constants.DEFAULT_REGISTRY)).removeParameter(Constants.REGISTRY_KEY);
         // 获得注册中心
         Registry registry = registryFactory.getRegistry(url);
