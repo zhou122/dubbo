@@ -290,12 +290,14 @@ public class DubboProtocol extends AbstractProtocol {
         //client can export a service which's only for server to invoke
         boolean isServer = url.getParameter(Constants.IS_SERVER_KEY, true);
         if (isServer) {
+            //HeaderExchangeServer
             ExchangeServer server = serverMap.get(key);
             //为什么会存在呢？因为键是 host:port ，那么例如，多个 Service 共用同一个 Protocol ，服务器是同一个对象
             if (server == null) {
                 serverMap.put(key, createServer(url));
             } else {
                 // server supports reset, use together with override
+                // HeaderExchangeServer
                 server.reset(url);
             }
         }

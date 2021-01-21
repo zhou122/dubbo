@@ -56,7 +56,7 @@ public class HeaderExchangeServer implements ExchangeServer {
                     "dubbo-remoting-server-heartbeat",
                     true));
     /**
-     * 服务器
+     * 具体的服务器实现，例如NettyServer
      */
     private final Server server;
     /**
@@ -222,7 +222,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     }
 
     public void reset(URL url) {
-        // 重置服务器
+        // 重置服务器   AbstractServer#reset
         server.reset(url);
         try {
             if (url.hasParameter(Constants.HEARTBEAT_KEY)

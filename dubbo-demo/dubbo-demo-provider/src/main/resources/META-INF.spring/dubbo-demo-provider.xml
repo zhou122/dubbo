@@ -21,6 +21,8 @@ limitations under the License.
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
        http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
+<!--    <dubbo:provider server="netty4"/>-->
+
     <!-- provider's application name, used for tracing dependency relationship -->
     <dubbo:application name="demo-provider"/>
 
@@ -32,11 +34,10 @@ limitations under the License.
     <dubbo:protocol name="dubbo" port="20880"/>
 
     <!-- service implementation, as same as regular local bean -->
-    <bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl"/>
-
+    <bean id="demoService" class="com.alibaba.dubbo.demo.provider.DemoServiceImpl" />
     <!-- declare the service interface to be exported -->
     <dubbo:service interface="com.alibaba.dubbo.demo.DemoService" ref="demoService"/>
 
-<!--    <bean id="otherService" class="com.alibaba.dubbo.demo.provider.OtherServiceImpl"/>
-    <dubbo:service interface="com.alibaba.dubbo.demo.OtherService" ref="otherService"/>-->
+    <bean id="otherService" class="com.alibaba.dubbo.demo.provider.OtherServiceImpl"/>
+    <dubbo:service interface="com.alibaba.dubbo.demo.OtherService" ref="otherService"/>
 </beans>

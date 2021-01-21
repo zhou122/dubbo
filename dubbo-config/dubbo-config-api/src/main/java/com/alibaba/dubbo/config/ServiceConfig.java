@@ -587,12 +587,12 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
                         // 使用 Protocol 暴露 Invoker 对象
                         /**
                          * 实际上，Protocol 有两个 Wrapper 拓展实现类： ProtocolFilterWrapper、ProtocolListenerWrapper 。所以，#export(...) 方法的调用顺序是：
-                         * Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => RegistryProtocol
+                         * Protocol$Adaptive => ProtocolListenerWrapper => ProtocolFilterWrapper => RegistryProtocol
                          * =>
-                         * Protocol$Adaptive => ProtocolFilterWrapper => ProtocolListenerWrapper => DubboProtocol
+                         * Protocol$Adaptive => ProtocolListenerWrapper => ProtocolFilterWrapper => DubboProtocol
                          * 也就是说，这一条大的调用链，包含两条小的调用链。原因是：
-                         * 首先，传入的是注册中心的 URL ，通过 Protocol$Adaptive 获取到的是 RegistryProtocol 对象
-                         * 其次，RegistryProtocol 会在其 #export(...) 方法中，使用服务提供者的 URL ( 即注册中心的 URL 的 export 参数值)，
+                         * 首先，传入的是注册中心的 URL ，通过 Protocol$Adaptive 获取到的是 RegistryProtocol对象(此时是注册中心URL，所以URL中Protocol属性值是registry)
+                         * 其次，RegistryProtocol 会在其 #export(...) 方法中，使用服务提供者的 URL (即注册中心的 URL 的 export 参数值，所以URL中Protocol属性值是具体的通信协议，例如Dubbo )，
                          * 再次调用 Protocol$Adaptive 获取到的是 DubboProtocol 对象，进行服务暴露
                          * 为什么是这样的顺序？通过这样的顺序，可以实现类似 AOP 的效果，在本地服务器启动完成后，再向注册中心注册
                          * 这也是为什么上文提到的 “为什么传递的是注册中心的 URL 呢？” 的原因

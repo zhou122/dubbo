@@ -55,6 +55,7 @@ public class HeaderExchanger implements Exchanger {
      * @throws RemotingException
      */
     public ExchangeServer bind(URL url, ExchangeHandler handler) throws RemotingException {
+        //HeaderExchangeServer构造方法内部会开启心跳检测   这里的ExchangeHandler handler是DubboProtocol中的requestHandler属性
         return new HeaderExchangeServer(Transporters.bind(url, new DecodeHandler(new HeaderExchangeHandler(handler))));
     }
 

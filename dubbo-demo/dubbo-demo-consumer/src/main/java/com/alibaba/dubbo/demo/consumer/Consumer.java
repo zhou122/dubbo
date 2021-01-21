@@ -18,6 +18,7 @@ package com.alibaba.dubbo.demo.consumer;
 
 import com.alibaba.dubbo.bean.TraceRecord;
 import com.alibaba.dubbo.demo.DemoService;
+import com.alibaba.dubbo.demo.OtherService;
 import com.alibaba.dubbo.util.TraceContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -30,13 +31,15 @@ public class Consumer {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(new String[]{"META-INF.spring/dubbo-demo-consumer.xml"});
         context.start();
         DemoService demoService = (DemoService) context.getBean("demoService"); // get remote service proxy
-
+        OtherService otherService = (OtherService)context.getBean("otherService");
         while (true) {
             try {
                 String hello = demoService.sayHello("world"); // call remote method
                 System.out.println(hello); // get result
-                String toString = demoService.toString();
-                System.out.println(toString);
+                hello = otherService.sayHello("world"); // call remote method
+                System.out.println(hello); // get result
+                /*String toString = demoService.toString();
+                System.out.println(toString);*/
 
                 Thread.sleep(1000*60*60);
             } catch (Throwable throwable) {

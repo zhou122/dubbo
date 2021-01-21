@@ -33,6 +33,10 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
      */
     private final ChannelHandler handler;
 
+    /**
+     * 该协议的第一个服务提供者的URL，
+     * Server只需要用到URL中的参数，与具体某一个服务没什么关系
+     */
     private volatile URL url;
 
     /**
@@ -142,6 +146,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
+        //MultiMessageHandler
         handler.received(ch, msg);
     }
 

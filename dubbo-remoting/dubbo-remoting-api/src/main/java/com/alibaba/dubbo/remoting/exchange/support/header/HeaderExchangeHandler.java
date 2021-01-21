@@ -101,7 +101,7 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
         // find handler by message class.
         Object msg = req.getData();
         try {
-            // handle data.
+            // handle data.     DubboProtocol
             Object result = handler.reply(channel, msg);
             res.setStatus(Response.OK);
             res.setResult(result);
