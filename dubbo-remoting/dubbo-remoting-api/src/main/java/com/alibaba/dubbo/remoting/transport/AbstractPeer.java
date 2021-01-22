@@ -128,6 +128,7 @@ public abstract class AbstractPeer implements Endpoint, ChannelHandler {
         if (closed) {
             return;
         }
+        //AbstractChannelHandlerDelegate
         handler.connected(ch);
     }
 

@@ -38,6 +38,7 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
     }
 
     public void connected(Channel channel) throws RemotingException {
+        //HeartbeatHandler-->HeaderExchangeHandler
         handler.connected(channel);
     }
 

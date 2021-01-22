@@ -126,7 +126,7 @@ public class StubProxyFactoryWrapper implements ProxyFactory {
      * @throws RpcException
      */
     public <T> Invoker<T> getInvoker(T proxy, Class<T> type, URL url) throws RpcException {
-        //JavassistProxyFactory和JdkProxyFactory
+        //JavassistProxyFactory(默认)和JdkProxyFactory
         return proxyFactory.getInvoker(proxy, type, url);
     }
 

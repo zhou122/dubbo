@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @date 2017/11/23
  * 服务提供者和消费者注册表，存储 JVM 进程内自己的服务提供者和消费者的 Invoker
- * 该信息用于 Dubbo QOS 使用，例如将 JVM 进程中，自己的服务提供者下线，又或者查询自己的服务提供者和消费者列表
+ * 该信息用于 Dubbo QOS（Quality of Service，服务质量） 使用，例如将 JVM 进程中，自己的服务提供者下线，又或者查询自己的服务提供者和消费者列表
  */
 public class ProviderConsumerRegTable {
     /**

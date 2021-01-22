@@ -38,8 +38,8 @@ public class Consumer {
                 System.out.println(hello); // get result
                 hello = otherService.sayHello("world"); // call remote method
                 System.out.println(hello); // get result
-                /*String toString = demoService.toString();
-                System.out.println(toString);*/
+                String toString = demoService.toString();
+                System.out.println(toString);
 
                 Thread.sleep(1000*60*60);
             } catch (Throwable throwable) {

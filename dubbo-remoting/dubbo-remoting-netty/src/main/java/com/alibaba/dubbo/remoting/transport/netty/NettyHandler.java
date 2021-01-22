@@ -44,6 +44,8 @@ public class NettyHandler extends SimpleChannelHandler {
 
     private final ChannelHandler handler;
 
+    private int num =0;
+
     public NettyHandler(URL url, ChannelHandler handler) {
         if (url == null) {
             throw new IllegalArgumentException("url == null");
@@ -66,6 +68,7 @@ public class NettyHandler extends SimpleChannelHandler {
             if (channel != null) {
                 channels.put(NetUtils.toAddressString((InetSocketAddress) ctx.getChannel().getRemoteAddress()), channel);
             }
+            //AbstractServer
             handler.connected(channel);
         } finally {
             NettyChannel.removeChannelIfDisconnected(ctx.getChannel());
@@ -85,6 +88,7 @@ public class NettyHandler extends SimpleChannelHandler {
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        System.out.println("==================num:"+(++num));
         NettyChannel channel = NettyChannel.getOrAddChannel(ctx.getChannel(), url, handler);
         try {
             //AbstractPeer

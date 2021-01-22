@@ -127,6 +127,7 @@ public class ExchangeCodec extends TelnetCodec {
         ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
 
         try {
+            //DubboCodeC
             return decodeBody(channel, is, header);
         } finally {
             // skip 未读完的流，并打印错误日志

@@ -218,7 +218,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
             ch.close();// 关闭新的链接
             return;
         }
-        // 连接
+        // 连接 AbstractPeer
         super.connected(ch);
     }
 

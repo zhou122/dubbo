@@ -147,7 +147,7 @@ public class RegistryProtocol implements Protocol {
     }
 
     public <T> Exporter<T> export(final Invoker<T> originInvoker) throws RpcException {
-        //export invoker  暴露服务，用于本地启动服务
+        //export invoker  暴露服务，用于本地启动服务。这个接口内部会启动第二条调用链Protocol$Adaptive => ProtocolListenerWrapper => ProtocolFilterWrapper => DubboProtocol
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker);
         // 获得注册中心 URL,其中的export包含了要注册的服务的地址
         // zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=demo-provider&dubbo=2.0.0&export=dubbo%3A%2F%2F169.254.232.73%3A20880%2Fcom.alibaba.dubbo.demo.DemoService%3Fanyhost%3Dtrue%26application%3Ddemo-provider%26bind.ip%3D169.254.232.73%26bind.port%3D20880%26dubbo%3D2.0.0%26generic%3Dfalse%26interface%3Dcom.alibaba.dubbo.demo.DemoService%26methods%3DsayHello%26pid%3D3308%26qos.port%3D22222%26side%3Dprovider%26timestamp%3D1583034085877&pid=3308&qos.port=22222&timestamp=1583034085862
@@ -174,6 +174,8 @@ public class RegistryProtocol implements Protocol {
         // 当提供者订阅时，它将影响:某个JVM公开服务并调用相同的服务。因为订阅是按服务名称缓存的，所以它会导致订阅信息被覆盖。
         // 添加category=configurators属性，provider://169.254.232.73:20880/com.alibaba.dubbo.demo.DemoService?anyhost=true&application=demo-provider&category=configurators&check=false&dubbo=2.0.0&generic=false&interface=com.alibaba.dubbo.demo.DemoService&methods=sayHello&pid=16604&side=provider&timestamp=1583208804060
         final URL overrideSubscribeUrl = getSubscribedOverrideUrl(registedProviderUrl);
+        //服务提供者订阅自己时的监听器，这里只订阅configurators目录。当configurators目录发生变化时，会重新暴露服务，并建立新url与invoker之间对应关系
+        //例如：通过zkUI等可视化插件，可以改变configurators目录信息
         final OverrideListener overrideSubscribeListener = new OverrideListener(overrideSubscribeUrl, originInvoker);
         overrideListeners.put(overrideSubscribeUrl, overrideSubscribeListener);
         //FailbackRegistry
@@ -203,7 +205,7 @@ public class RegistryProtocol implements Protocol {
                 if (exporter == null) {
                     // 创建 Invoker Delegate 对象
                     final Invoker<?> invokerDelegete = new InvokerDelegete<T>(originInvoker, getProviderUrl(originInvoker));
-                    // 调用 DubboProtocol#export(invoker) 方法，暴露服务，返回 Exporter 对象
+                    // 调用 DubboProtocol#export(invoker) 方法，暴露服务，返回 Exporter 对象   Protocol$Adaptive => ProtocolListenerWrapper => ProtocolFilterWrapper => DubboProtocol
                     // 使用 创建的Exporter对象 + originInvoker ，创建 ExporterChangeableWrapper 对象
                     exporter = new ExporterChangeableWrapper<T>((Exporter<T>) protocol.export(invokerDelegete), originInvoker);
                     // 添加到 `bounds`
@@ -228,6 +230,7 @@ public class RegistryProtocol implements Protocol {
             logger.warn(new IllegalStateException("error state, exporter should not be null"));
         } else {
             final Invoker<T> invokerDelegete = new InvokerDelegete<T>(originInvoker, newInvokerUrl);
+            //dubboProtocol#export重新暴露服务
             exporter.setExporter(protocol.export(invokerDelegete));
         }
     }
@@ -377,6 +380,7 @@ public class RegistryProtocol implements Protocol {
         }
         // 向注册中心订阅服务提供者(和配置，路由信息)
         // 在该方法中，会循环获得到的服务体用这列表，调用 Protocol#refer(type, url) 方法，创建每个调用服务的 Invoker 对象
+        // 这个方法中的listener#notify 中会开始第二条链    Protocol$Adaptive#refer => ProtocolFilterWrapper#refer => ProtocolListenerWrapper#refer => DubboProtocol#refer
         directory.subscribe(subscribeUrl.addParameter(Constants.CATEGORY_KEY,
                 Constants.PROVIDERS_CATEGORY
                         + "," + Constants.CONFIGURATORS_CATEGORY
@@ -468,6 +472,7 @@ public class RegistryProtocol implements Protocol {
             //Merged with this configuration
             URL newUrl = getConfigedInvokerUrl(configurators, originUrl);
             if (!currentUrl.equals(newUrl)) {
+                //重新暴露服务
                 RegistryProtocol.this.doChangeLocalExport(originInvoker, newUrl);
                 logger.info("exported provider url changed, origin url: " + originUrl + ", old export url: " + currentUrl + ", new export url: " + newUrl);
             }

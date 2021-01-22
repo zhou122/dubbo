@@ -45,6 +45,7 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
     public void connected(Channel channel) throws RemotingException {
         setReadTimestamp(channel);
         setWriteTimestamp(channel);
+        //AllChannelHandler
         handler.connected(channel);
     }
 

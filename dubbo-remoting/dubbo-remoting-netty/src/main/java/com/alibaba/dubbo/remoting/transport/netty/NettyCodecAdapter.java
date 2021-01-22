@@ -130,6 +130,7 @@ final class NettyCodecAdapter {
                 do {
                     saveReaderIndex = message.readerIndex();
                     try {
+                        //DubboCountCodec   将接收到的消息封装为MultiMessage
                         msg = codec.decode(channel, message);
                     } catch (IOException e) {
                         buffer = com.alibaba.dubbo.remoting.buffer.ChannelBuffers.EMPTY_BUFFER;
@@ -144,6 +145,7 @@ final class NettyCodecAdapter {
                             throw new IOException("Decode without read data.");
                         }
                         if (msg != null) {
+                            //向pipleLine下一个节点传递信息，NettyHandler
                             Channels.fireMessageReceived(ctx, msg, event.getRemoteAddress());
                         }
                     }

@@ -222,7 +222,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 this.overrideDirectoryUrl = configurator.configure(overrideDirectoryUrl);
             }
         }
-        // providers
+        // providers    执行第二条调用链
         refreshInvoker(invokerUrls);
     }
 
@@ -236,6 +236,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
      */
     // TODO: 2017/8/31 FIXME The thread pool should be used to refresh the address, otherwise the task may be accumulated.
     private void refreshInvoker(List<URL> invokerUrls) {
+        //所有服务提供者都下线了
         if (invokerUrls != null && invokerUrls.size() == 1 && invokerUrls.get(0) != null
                 && Constants.EMPTY_PROTOCOL.equals(invokerUrls.get(0).getProtocol())) {
             this.forbidden = true; // Forbid to access
@@ -245,14 +246,17 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
             this.forbidden = false; // Allow to access
             Map<String, Invoker<T>> oldUrlInvokerMap = this.urlInvokerMap; // local reference
             if (invokerUrls.isEmpty() && this.cachedInvokerUrls != null) {
+                //如果providers目录未发送变化，invokerUrls则为空，表示使用上次缓存的服务提供者URL对应的invoker
                 invokerUrls.addAll(this.cachedInvokerUrls);
             } else {
+                //如果invokerUrls不为空，则用iinvokerUrls中的值替换原缓存的invokerUrls，这里说明，如果providers发生变化，invokerUrls中会包含此时注册中心所有的服务提供者
                 this.cachedInvokerUrls = new HashSet<URL>();
                 this.cachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison
             }
             if (invokerUrls.isEmpty()) {
                 return;
             }
+            //内部执行第二条调用链 Protocol$Adaptive#refer => ProtocolFilterWrapper#refer => ProtocolListenerWrapper#refer => DubboProtocol#refer
             Map<String, Invoker<T>> newUrlInvokerMap = toInvokers(invokerUrls);// Translate url list to Invoker map
             Map<String, List<Invoker<T>>> newMethodInvokerMap = toMethodInvokers(newUrlInvokerMap); // Change method name to map Invoker Map
             // state change
@@ -261,6 +265,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 logger.error(new IllegalStateException("urls to invokers error .invokerUrls.size :" + invokerUrls.size() + ", invoker.size :0. urls :" + invokerUrls.toString()));
                 return;
             }
+            //multiGroup 是否支持multiGroup机制
             this.methodInvokerMap = multiGroup ? toMergeMethodInvokerMap(newMethodInvokerMap) : newMethodInvokerMap;
             this.urlInvokerMap = newUrlInvokerMap;
             try {
@@ -368,6 +373,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         + ", supported protocol: " + ExtensionLoader.getExtensionLoader(Protocol.class).getSupportedExtensions()));
                 continue;
             }
+            //合并URL中的属性,消费端属性覆盖生产者端属性
             URL url = mergeUrl(providerUrl);
 
             String key = url.toFullString(); // The parameter urls are sorted
@@ -387,6 +393,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                         enabled = url.getParameter(Constants.ENABLED_KEY, true);
                     }
                     if (enabled) {
+                        //第二条调用链Protocol$Adaptive#refer => ProtocolFilterWrapper#refer => ProtocolListenerWrapper#refer => DubboProtocol#refer
                         invoker = new InvokerDelegate<T>(protocol.refer(serviceType, url), url, providerUrl);
                     }
                 } catch (Throwable t) {

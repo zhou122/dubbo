@@ -116,6 +116,7 @@ public class DubboProtocol extends AbstractProtocol {
                 // 设置调用方的地址
                 RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
                 // 执行调用
+                // 执行完ProtocolFilterWrapper#buildInvokerChain中封装的一系列invoker后，
                 return invoker.invoke(inv);
             }
             throw new RemotingException(channel, "Unsupported request: "
@@ -153,7 +154,7 @@ public class DubboProtocol extends AbstractProtocol {
         private void invoke(Channel channel, String methodKey) {
             // 创建 Invocation 对象
             Invocation invocation = createInvocation(channel, channel.getUrl(), methodKey);
-            // 调用 received 方法，执行对应的方法
+            // invocation不为空，则表示有连接建立对应的回调方法
             if (invocation != null) {
                 try {
                     received(channel, invocation);
@@ -164,6 +165,7 @@ public class DubboProtocol extends AbstractProtocol {
         }
 
         private Invocation createInvocation(Channel channel, URL url, String methodKey) {
+            logger.info("建立连接创建回调时URL:"+url);
             String method = url.getParameter(methodKey);
             if (method == null || method.length() == 0) {
                 return null;
