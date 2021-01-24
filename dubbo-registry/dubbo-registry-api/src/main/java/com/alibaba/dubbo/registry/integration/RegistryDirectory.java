@@ -86,6 +86,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
      */
     private volatile List<Configurator> configurators; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
+    // 缓存url与服务消费者之间的映射关系
     // Map<url, Invoker> cache service url to invoker mapping.
     private volatile Map<String, Invoker<T>> urlInvokerMap; // The initial value is null and the midway may be assigned to null, please use the local variable reference
 
@@ -249,6 +250,7 @@ public class RegistryDirectory<T> extends AbstractDirectory<T> implements Notify
                 //如果providers目录未发送变化，invokerUrls则为空，表示使用上次缓存的服务提供者URL对应的invoker
                 invokerUrls.addAll(this.cachedInvokerUrls);
             } else {
+                // 消费端，一开始走这里
                 //如果invokerUrls不为空，则用iinvokerUrls中的值替换原缓存的invokerUrls，这里说明，如果providers发生变化，invokerUrls中会包含此时注册中心所有的服务提供者
                 this.cachedInvokerUrls = new HashSet<URL>();
                 this.cachedInvokerUrls.addAll(invokerUrls);//Cached invoker urls, convenient for comparison
