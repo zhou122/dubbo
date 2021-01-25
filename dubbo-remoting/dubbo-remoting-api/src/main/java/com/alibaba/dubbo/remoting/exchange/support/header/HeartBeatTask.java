@@ -77,6 +77,7 @@ final class HeartBeatTask implements Runnable {
                         // 客户端侧，重新连接服务端
                         if (channel instanceof Client) {
                             try {
+                                //AbstractClient
                                 ((Client) channel).reconnect();
                             } catch (Exception e) {
                                 //do nothing

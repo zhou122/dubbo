@@ -188,8 +188,8 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
      * init reconnect thread
      */
     private synchronized void initConnectStatusCheckCommand() {
-        // 获得获得重连频率，默认开启
-        //reconnect=false to close reconnect
+        // 获得重连频率，默认开启
+        //reconnect=false to close reconnect, 默认2000
         int reconnect = getReconnectParam(getUrl());
         // 若开启重连功能，创建重连线程
         if (reconnect > 0 && (reconnectExecutorFuture == null || reconnectExecutorFuture.isCancelled())) {
