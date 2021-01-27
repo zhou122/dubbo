@@ -115,7 +115,6 @@ public class DubboProtocol extends AbstractProtocol {
                 }
                 // 设置调用方的地址
                 RpcContext.getContext().setRemoteAddress(channel.getRemoteAddress());
-                // 执行调用
                 // 执行完ProtocolFilterWrapper#buildInvokerChain中封装的一系列invoker后，
                 return invoker.invoke(inv);
             }

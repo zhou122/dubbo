@@ -292,6 +292,11 @@ public final class ClassGenerator {
                     }
                 }
             }
+            try {
+                mCtc.writeFile("D:\\dubboJavassist");
+            }catch(Exception e){
+                e.printStackTrace();
+            }
             return mCtc.toClass(loader, pd);
         } catch (RuntimeException e) {
             throw e;

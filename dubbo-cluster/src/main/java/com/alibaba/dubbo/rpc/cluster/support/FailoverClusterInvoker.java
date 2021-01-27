@@ -94,7 +94,7 @@ public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
             // 设置已经调用的 Invoker 集合，到 Context 中
             RpcContext.getContext().setInvokers((List) invoked);
             try {
-                // RPC 调用得到 Result   AbstractInvoker
+                // RPC 调用得到 Result   InvokerWrapper
                 Result result = invoker.invoke(invocation);
                 // 重试过程中，将最后一次调用的异常信息以 warn 级别日志输出
                 if (le != null && logger.isWarnEnabled()) {

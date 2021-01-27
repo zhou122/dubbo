@@ -44,7 +44,7 @@ public class JdkProxyFactory extends AbstractProxyFactory {
 
     /**
      * 服务方创建invoker对象
-     * @param proxy
+     * @param proxy  实际service对象
      * @param type
      * @param url
      * @param <T>

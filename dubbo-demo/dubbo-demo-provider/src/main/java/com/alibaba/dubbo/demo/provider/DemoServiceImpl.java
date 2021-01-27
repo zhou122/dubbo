@@ -29,6 +29,16 @@ public class DemoServiceImpl implements DemoService {
         return "Hello " + name + ", response form provider: " + RpcContext.getContext().getLocalAddress();
     }
 
+    public String sayHello(Integer day){
+        System.out.println("[" + new SimpleDateFormat("HH:mm:ss").format(new Date()) + "] Hello " + day + ", request from consumer: " + RpcContext.getContext().getRemoteAddress());
+        return "Hello " + day + ", response form provider: " + RpcContext.getContext().getLocalAddress();
+    }
+
+    public String currDate(){
+        System.out.println("[timestamp:"+System.currentTimeMillis()+"]");
+        return "[timestamp:"+System.currentTimeMillis()+"]";
+    }
+
     @Override
     public String toString() {
         System.out.println("执行toString方法");

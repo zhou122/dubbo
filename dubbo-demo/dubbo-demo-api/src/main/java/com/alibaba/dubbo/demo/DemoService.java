@@ -20,5 +20,10 @@ public interface DemoService {
 
     String sayHello(String name);
 
+    String sayHello(Integer name);
+
+    String currDate();
+
     String toString();
+
 }
